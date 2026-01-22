@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;">
+    <div class="card" style="flex: 1; min-width: 250px;">
+        <h3>Daily Sales</h3>
+        <p style="font-size: 2rem; font-weight: bold;">${{ daily_sales_total|default:"0.00" }}</p>
+    </div>
+    <div class="card" style="flex: 1; min-width: 250px;">
+        <h3>Monthly Sales</h3>
+        <p style="font-size: 2rem; font-weight: bold;">${{ monthly_sales_total|default:"0.00" }}</p>
+    </div>
+</div>
+
+<div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+    <!-- Sales Trend Chart -->
+    <div class="card" style="flex: 2; min-width: 400px;">
+        <h3>Sales Trend (Last 30 Days)</h3>
+        <canvas id="salesChart"></canvas>
+    </div>
+
+    <!-- Top Products Chart -->
+    <div class="card" style="flex: 1; min-width: 300px;">
+        <h3>Top 5 Medicines</h3>
+        <canvas id="productsChart"></canvas>
+    </div>
+</div>
+
+<!-- Detailed Reports Section -->
+<div class="card" style="margin-top: 2rem;">
+    <h2>Detailed Sales Report</h2>
+
+    <!-- Filter Form -->
+    <form method="get" style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; align-items: flex-end;">
+        <div>
+            <label>Start Date</label><br>
+            <input type="date" name="start_date" value="{{ filter_start }}" class="form-control"
+                style="padding: 0.5rem;">
+        </div>
+        <div>
+            <label>End Date</label><br>
+            <input type="date" name="end_date" value="{{ filter_end }}" class="form-control" style="padding: 0.5rem;">
+        </div>
+        <div>
+            <label>Product</label><br>
+            <select name="product_id" style="padding: 0.5rem;">
+                <option value="">-- All Products --</option>
+                {% for p in all_products %}
+                <option value="{{ p.id }}" {% if filter_product_id == p.id %}selected{% endif %}>{{ p.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn">Filter</button>
+        <a href="{% url 'reports' %}" class="btn btn-danger" style="background: #333;">Reset</a>
+    </form>
+
+    <!-- Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Medicine</th>
+                <th>Batch</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Total</th>
+                <th>Cashier</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in detailed_items %}
+            <tr>
+                <td>{{ item.sale_record.date_created|date:"Y-m-d H:i" }}</td>
+                <td>{{ item.batch.product.name }}</td>
+                <td>{{ item.batch.batch_number }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.price_at_sale }}</td>
+                <td>{{ item.item_total }}</td>
+                <td>{{ item.sale_record.cashier.username }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="text-align: center; color: #666;">No records found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Load Chart.js -->
+<script src="{% static 'js/chart.js' %}"></script>
+<script>
+    // --- Data from Django ---
+    // Use JSON.parse with escapejs to avoid IDE syntax errors with raw Django tags
+    const salesDates = JSON.parse('{{ chart_dates|escapejs }}');
+    const salesAmounts = JSON.parse('{{ chart_sales|escapejs }}');
+    const prodNames = JSON.parse('{{ top_prod_names|escapejs }}');
+    const prodQtys = JSON.parse('{{ top_prod_qtys|escapejs }}');
+
+    // --- Sales Trend Line Chart ---
+    const ctxSales = document.getElementById('salesChart').getContext('2d');
+    new Chart(ctxSales, {
+        type: 'line',
+        data: {
+            labels: salesDates,
+            datasets: [{
+                label: 'Sales ($)',
+                data: salesAmounts,
+                borderColor: '#d32f2f', // Red Theme
+                backgroundColor: 'rgba(211, 47, 47, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    // --- Top Products Bar Chart ---
+    const ctxProds = document.getElementById('productsChart').getContext('2d');
+    new Chart(ctxProds, {
+        type: 'bar', // Horizontal bar via indexAxis is standard in new Chartjs, or use 'horizontalBar' in v2
+        data: {
+            labels: prodNames,
+            datasets: [{
+                label: 'Units Sold',
+                data: prodQtys,
+                backgroundColor: '#1976d2',
+                borderColor: '#1565c0',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y', // Makes it horizontal in Chart.js 3+
+            responsive: true,
+        }
+    });
+</script>
+{% endblock %}

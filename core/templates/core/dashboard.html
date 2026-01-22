@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Dashboard</h1>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+    {% if user.role == 'ADMIN' or user.role == 'PHARMACIST' %}
+    <div class="card">
+        <h3>Inventory Alert</h3>
+        <p>Low stock items: <strong>{{ low_stock_count }}</strong></p>
+        <a href="{% url 'inventory_index' %}" class="btn">Manage Inventory</a>
+    </div>
+    {% endif %}
+
+    {% if user.role == 'ADMIN' or user.role == 'CASHIER' %}
+    <div class="card">
+        <h3>POS Kiosk</h3>
+        <p>Start Selling</p>
+        <a href="{% url 'add_sale' %}" class="btn">Launch POS</a>
+    </div>
+    {% endif %}
+
+    {% if user.role == 'ADMIN' %}
+    <div class="card">
+        <h3>Reports</h3>
+        <p>View daily/monthly reports</p>
+        <a href="{% url 'reports' %}" class="btn">View Reports</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

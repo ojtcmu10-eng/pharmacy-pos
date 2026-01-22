@@ -1,0 +1,541 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacy Kiosk POS</title>
+    <style>
+        :root {
+            --primary: #d32f2f;
+            --primary-dark: #b71c1c;
+            --danger: #333;
+            /* Secondary/Remove */
+            --success: #d32f2f;
+            /* Pay Button also Red to match theme, or Green? User said "White and Red theme". Let's keep Pay as Red or maybe Green for contrast? Usually Pay is Green, but requested theme is White/Red. Let's make Pay Button Primary Red. */
+            --bg-light: #f3f4f6;
+            --white: #ffffff;
+            --text-dark: #1f2937;
+            --text-gray: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-light);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Bar */
+        header {
+            background: var(--white);
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .meta {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+        }
+
+        .btn-link {
+            color: var(--text-dark);
+            text-decoration: none;
+            font-weight: 500;
+            margin-left: 1rem;
+            cursor: pointer;
+        }
+
+        /* Main Layout */
+        .workspace {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 60px);
+        }
+
+        /* Left Panel: Products */
+        .product-panel {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .search-bar {
+            padding: 1rem;
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 1.1rem;
+            border: 2px solid var(--border);
+            border-radius: 0.5rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-bar input:focus {
+            border-color: var(--primary);
+        }
+
+        .product-grid {
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+            overflow-y: auto;
+            align-content: start;
+        }
+
+        .product-card {
+            background: var(--white);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 140px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+            border: 1px solid transparent;
+        }
+
+        .product-card:active {
+            transform: scale(0.98);
+        }
+
+        .product-card.selected {
+            border-color: var(--primary);
+            background-color: #eff6ff;
+        }
+
+        .product-name {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-dark);
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .product-meta {
+            margin-top: auto;
+        }
+
+        .product-stock {
+            font-size: 0.8rem;
+            color: var(--text-gray);
+        }
+
+        .product-price {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-top: 0.25rem;
+        }
+
+        /* Right Panel: Cart */
+        .cart-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--white);
+            min-width: 350px;
+        }
+
+        .cart-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            font-weight: bold;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .clear-cart {
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .cart-item-row {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            animation: slideIn 0.2s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .item-price {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+        }
+
+        .item-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .qty-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .qty-btn:active {
+            background: var(--bg-light);
+        }
+
+        .qty-display {
+            font-weight: 600;
+            font-size: 1.1rem;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .remove-btn {
+            color: var(--text-gray);
+            cursor: pointer;
+            margin-left: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .remove-btn:hover {
+            color: var(--danger);
+        }
+
+        .cart-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border);
+            background: #f9fafb;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+            color: var(--text-gray);
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text-dark);
+        }
+
+        .pay-btn {
+            width: 100%;
+            padding: 1.25rem;
+            background: var(--success);
+            color: var(--white);
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.4);
+            transition: transform 0.1s;
+        }
+
+        .pay-btn:active {
+            transform: translateY(2px);
+        }
+
+        .pay-btn:disabled {
+            background: var(--text-gray);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="brand">Darynn Pharmacy Kiosk</div>
+        <div class="meta">
+            <span id="clock">--:--</span> | {{ user.get_role_display|default:user.username }}
+            <a href="{% url 'dashboard' %}" class="btn-link">Exit</a>
+        </div>
+    </header>
+
+    <div class="workspace">
+        <!-- Left Panel -->
+        <div class="product-panel">
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search medicines..." autocomplete="off">
+            </div>
+            <div class="product-grid" id="productGrid">
+                <!-- Product Cards injected by JS -->
+                {% for product in products %}
+                <div class="product-card" data-id="{{ product.id }}" data-name="{{ product.name }}"
+                    data-price="{{ product.batch_set.first.selling_price|default:'0.00' }}"
+                    data-stock="{{ product.total_stock }}" onclick="addToCart(this)">
+                    <div class="product-name">{{ product.name }}</div>
+                    <div class="product-meta">
+                        <div class="product-stock">Stock: {{ product.total_stock }}</div>
+                        {% if product.total_stock > 0 %}
+                        <div class="product-price">${{ product.batch_set.first.selling_price|default:'N/A' }}</div>
+                        {% else %}
+                        <div class="product-price" style="color:var(--danger)">Out of Stock</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="cart-panel">
+            <div class="cart-header">
+                <span>Current Order</span>
+                <span class="clear-cart" onclick="clearCart()">Clear All</span>
+            </div>
+            <div class="cart-items" id="cartItems">
+                <!-- Cart Items injected by JS -->
+                <div style="padding: 2rem; text-align: center; color: var(--text-gray);">
+                    Cart is empty
+                </div>
+            </div>
+            <div class="cart-footer">
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span id="subtotalDisplay">$0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Tax (0%)</span> <!-- Simplified for demo -->
+                    <span>$0.00</span>
+                </div>
+                <div class="total-row">
+                    <span>Total</span>
+                    <span id="totalDisplay">$0.00</span>
+                </div>
+                <form id="checkoutForm" method="POST" action="{% url 'add_sale' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="customer_name" value="Walk-in">
+                    <input type="hidden" name="payment_method" value="Cash">
+                    <!-- Hidden inputs for items will be appended here -->
+                    <button type="button" class="pay-btn" id="payBtn" onclick="submitOrder()">PAY NOW</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Clock
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }, 1000);
+
+        // Search
+        const searchInput = document.getElementById('searchInput');
+        const productGrid = document.getElementById('productGrid');
+        const cards = document.querySelectorAll('.product-card');
+
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            cards.forEach(card => {
+                const name = card.dataset.name.toLowerCase();
+                if (name.includes(term)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // Auto-focus search on load
+        searchInput.focus();
+
+        // Cart Logic
+        let cart = {}; // { productId: { qty: 1, name: "...", price: 10.00, stock: 100 } }
+
+        function addToCart(card) {
+            const id = card.dataset.id;
+            const name = card.dataset.name;
+            const price = parseFloat(card.dataset.price);
+            const stock = parseInt(card.dataset.stock);
+
+            if (stock <= 0) return; // Prevent adding out of stock
+
+            if (cart[id]) {
+                if (cart[id].qty < stock) {
+                    cart[id].qty++;
+                }
+            } else {
+                cart[id] = { qty: 1, name: name, price: price, stock: stock };
+            }
+            renderCart();
+        }
+
+        function updateQty(id, delta) {
+            if (!cart[id]) return;
+
+            const newQty = cart[id].qty + delta;
+            if (newQty > cart[id].stock) {
+                // Max stock reached
+                return;
+            }
+
+            if (newQty <= 0) {
+                delete cart[id];
+            } else {
+                cart[id].qty = newQty;
+            }
+            renderCart();
+        }
+
+        function removeProduct(id) {
+            delete cart[id];
+            renderCart();
+        }
+
+        function clearCart() {
+            cart = {};
+            renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cartItems');
+            const subtotalEl = document.getElementById('subtotalDisplay');
+            const totalEl = document.getElementById('totalDisplay');
+
+            if (Object.keys(cart).length === 0) {
+                container.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-gray);">Cart is empty</div>';
+                subtotalEl.innerText = '$0.00';
+                totalEl.innerText = '$0.00';
+                document.getElementById('payBtn').disabled = true;
+                return;
+            }
+
+            document.getElementById('payBtn').disabled = false;
+            container.innerHTML = '';
+
+            let total = 0;
+
+            Object.entries(cart).forEach(([id, item]) => {
+                const itemTotal = item.qty * item.price;
+                total += itemTotal;
+
+                const row = document.createElement('div');
+                row.className = 'cart-item-row';
+                row.innerHTML = `
+                <div class="item-info">
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-price">$${item.price.toFixed(2)}</div>
+                </div>
+                <div class="item-controls">
+                    <div class="qty-btn" onclick="updateQty('${id}', -1)">−</div>
+                    <div class="qty-display">${item.qty}</div>
+                    <div class="qty-btn" onclick="updateQty('${id}', 1)">+</div>
+                    <div class="remove-btn" onclick="removeProduct('${id}')">×</div>
+                </div>
+            `;
+                container.appendChild(row);
+            });
+
+            subtotalEl.innerText = '$' + total.toFixed(2);
+            totalEl.innerText = '$' + total.toFixed(2);
+        }
+
+        function submitOrder() {
+            if (Object.keys(cart).length === 0) return;
+
+            const form = document.getElementById('checkoutForm');
+
+            // Clear previous hidden inputs just in case
+            const oldInputs = form.querySelectorAll('input[name="product_ids[]"], input[name="quantities[]"]');
+            oldInputs.forEach(el => el.remove());
+
+            // Add current cart items
+            Object.entries(cart).forEach(([id, item]) => {
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'product_ids[]';
+                idInput.value = id;
+
+                const qtyInput = document.createElement('input');
+                qtyInput.type = 'hidden';
+                qtyInput.name = 'quantities[]';
+                qtyInput.value = item.qty;
+
+                form.appendChild(idInput);
+                form.appendChild(qtyInput);
+            });
+
+            form.submit();
+        }
+    </script>
+
+</body>
+
+</html>

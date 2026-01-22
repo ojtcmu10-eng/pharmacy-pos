@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Batches</h1>
+<div style="margin-bottom: 1rem; text-align: right;">
+    <a href="{% url 'batch_add' %}" class="btn">Add Batch</a>
+</div>
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Batch Number</th>
+                <th>Product</th>
+                <th>Expiry Date</th>
+                <th>Quantity</th>
+                <th>Selling Price</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for batch in batches %}
+            <tr>
+                <td>{{ batch.batch_number }}</td>
+                <td>{{ batch.product.name }}</td>
+                <td>{{ batch.expiry_date }}</td>
+                <td>{{ batch.quantity }}</td>
+                <td>{{ batch.selling_price }}</td>
+                <td>
+                    <a href="{% url 'batch_edit' batch.pk %}" class="btn"
+                        style="padding: 2px 6px; font-size: 0.8em;">Edit</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Inventory Management</h1>
+<div class="card">
+    <table style="width: 100%; border: none;">
+        <thead>
+            <tr>
+                <th style="background: none; border-bottom: 2px solid #ddd;">Model Name</th>
+                <th style="background: none; border-bottom: 2px solid #ddd;">Add Link</th>
+                <th style="background: none; border-bottom: 2px solid #ddd;">Change or view list link</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Batches</strong></td>
+                <td><a href="{% url 'batch_add' %}" class="btn" style="font-size: 0.8rem;">Add</a></td>
+                <td><a href="{% url 'batch_list' %}">View List</a></td>
+            </tr>
+            <tr>
+                <td><strong>Categories</strong></td>
+                <td><a href="{% url 'category_add' %}" class="btn" style="font-size: 0.8rem;">Add</a></td>
+                <td><a href="{% url 'category_list' %}">View List</a></td>
+            </tr>
+            <tr>
+                <td><strong>Products</strong></td>
+                <td><a href="{% url 'product_add' %}" class="btn" style="font-size: 0.8rem;">Add</a></td>
+                <td><a href="{% url 'product_list' %}">View List</a></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

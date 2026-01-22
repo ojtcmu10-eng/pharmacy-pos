@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card" style="max-width: 400px; margin: 4rem auto;">
+    <h2 style="text-align: center;">Login</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div style="margin-bottom: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem;">Username</label>
+            {{ form.username }}
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem;">Password</label>
+            {{ form.password }}
+        </div>
+        <button type="submit" class="btn" style="width: 100%;">Login</button>
+    </form>
+</div>
+<style>
+    /* Quick fix for default django form rendering if simple */
+    input[type="text"],
+    input[type="password"] {
+        width: 100%;
+        padding: 0.5rem;
+        box-sizing: border-box;
+    }
+</style>
+{% endblock %}

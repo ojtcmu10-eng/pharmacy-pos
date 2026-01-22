@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Inventory</h1>
+<div style="margin-bottom: 1rem; display: flex; justify-content: space-between;">
+    <form method="get" style="display: flex;">
+        <input type="text" name="q" placeholder="Search product..." value="{{ request.GET.q }}">
+        <button type="submit" class="btn">Search</button>
+    </form>
+    <a href="{% url 'product_add' %}" class="btn">Add Product</a>
+</div>
+
+<div class="product-list"> {# Assuming a container for the cards #}
+    {% for product in products %}
+    <div class="product-card">
+        <div class="product-header">
+            <h3>{{ product.name }}</h3>
+            <span class="category-badge">{{ product.category.name }}</span>
+        </div>
+        <div class="product-body">
+            <p>{{ product.description }}</p>
+            <div class="stock-info">
+                <strong>Total Stock:</strong> {{ product.total_stock }}
+            </div>
+
+            <div class="batches-section">
+                <h4>Batches ({{ product.batch_set.count }})</h4>
+                <ul>
+                    {% for batch in product.batch_set.all %}
+                    <li>
+                        {{ batch.quantity }} qty @ ${{ batch.selling_price }}
+                        <small>(Exp: {{ batch.expiry_date }})</small>
+                    </li>
+                    {% endfor %}
+                </ul>
+                </tbody>
+                </table>
+                {% endblock %}

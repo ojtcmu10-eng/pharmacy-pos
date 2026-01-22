@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1>Daily Sales Log</h1>
+    <a href="{% url 'add_sale' %}" class="btn">Add New Sale</a>
+</div>
+
+<div class="card">
+    <h3>Today's Summary</h3>
+    <p>Total Sales: <strong>{{ total_sales|default:"0.00" }}</strong></p>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Time</th>
+            <th>Customer</th>
+            <th>Cashier</th>
+            <th>Total</th>
+            <th>Details</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for sale in sales %}
+        <tr>
+            <td>#{{ sale.pk }}</td>
+            <td>{{ sale.date_created|date:"H:i" }}</td>
+            <td>{{ sale.customer_name }}</td>
+            <td>{{ sale.cashier.username }}</td>
+            <td>{{ sale.total }}</td>
+            <td>
+                <ul>
+                    {% for item in sale.items.all %}
+                    <li>{{ item.batch.product.name }} ({{ item.quantity }})</li>
+                    {% endfor %}
+                </ul>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6">No sales today.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

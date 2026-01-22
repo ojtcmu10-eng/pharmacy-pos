@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card">
+    <h2>Add New Sale Record</h2>
+    <form method="post" id="saleForm">
+        {% csrf_token %}
+        <div style="margin-bottom: 1rem;">
+            <label>Customer Name</label>
+            <input type="text" name="customer_name" style="width: 100%; padding: 0.5rem;">
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <label>Payment Method</label>
+            <select name="payment_method" style="padding: 0.5rem;">
+                <option value="Cash">Cash</option>
+                <option value="Card">Card</option>
+            </select>
+        </div>
+
+        <h3>Items</h3>
+        <table id="itemsTable">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rows will be added here -->
+            </tbody>
+        </table>
+
+        <div style="margin-top: 1rem; padding: 1rem; background: #eee;">
+            <select id="productSelect" style="padding: 0.5rem;">
+                <option value="">-- Select Product --</option>
+                {% for product in products %}
+                <option value="{{ product.id }}">{{ product.name }} (Stock: {{ product.total_stock }})</option>
+                {% endfor %}
+            </select>
+            <input type="number" id="qtyInput" placeholder="Qty" style="width: 80px; padding: 0.5rem;" min="1">
+            <button type="button" class="btn" onclick="addItem()">Add Item</button>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <button type="submit" class="btn">Save Sale Record</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function addItem() {
+        const productSelect = document.getElementById('productSelect');
+        const qtyInput = document.getElementById('qtyInput');
+
+        const productId = productSelect.value;
+        const productName = productSelect.options[productSelect.selectedIndex].text;
+        const qty = qtyInput.value;
+
+        if (!productId || !qty) {
+            alert("Please select product and quantity");
+            return;
+        }
+
+        const tbody = document.querySelector('#itemsTable tbody');
+        const row = document.createElement('tr');
+
+        row.innerHTML = `
+            <td>
+                ${productName}
+                <input type="hidden" name="product_ids[]" value="${productId}">
+            </td>
+            <td>
+                ${qty}
+                <input type="hidden" name="quantities[]" value="${qty}">
+            </td>
+            <td>
+                <button type="button" class="btn btn-danger" onclick="this.closest('tr').remove()">Remove</button>
+            </td>
+        `;
+
+        tbody.appendChild(row);
+
+        qtyInput.value = '';
+        productSelect.value = '';
+    }
+</script>
+{% endblock %}

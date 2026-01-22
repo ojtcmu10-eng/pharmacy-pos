@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 2rem auto;">
+    <h2>Add Batch for {{ product.name }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn">Save Batch</button>
+    </form>
+</div>
+<script>
+    // Simple date picker enhancement if needed, or rely on browser native
+    document.querySelector('input[name="expiry_date"]').type = 'date';
+</script>
+{% endblock %}
